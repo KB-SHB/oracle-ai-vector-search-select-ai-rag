@@ -1,15 +1,24 @@
 -- Run as SUPPORT_AI.
 -- Step A: load an in-database ONNX embedding model (no external API, no data leaves the DB).
--- Download Oracle's pre-converted all-MiniLM-L12-v2 ONNX package from the link in Oracle's
--- AI Vector Search documentation, upload it to an OCI Object Storage bucket (pre-authenticated
--- request URL), and paste that URL below.  Model output = 384-dim vectors.
-DEFINE onnx_uri = 'https://objectstorage.<region>.oraclecloud.com/p/<PAR>/n/<ns>/b/<bucket>/o/all_MiniLM_L12_v2.onnx'
+-- Oracle publishes a pre-built all-MiniLM-L12-v2 ONNX file (384-dim vectors). Download it from Oracle's
+-- blog post "Use our prebuilt ONNX model now available for embedding generation" (search that title),
+-- unzip it, upload all_MiniLM_L12_v2.onnx to a private Object Storage bucket, create a
+-- pre-authenticated request (PAR) with read access, and paste the PAR URL below.
+DEFINE onnx_uri = 'https://objectstorage.<region>.oraclecloud.com/p/<PAR>/n/<namespace>/b/<bucket>/o/all_MiniLM_L12_v2.onnx'
 
 BEGIN
-  DBMS_VECTOR.LOAD_ONNX_MODEL_CLOUD(
+  -- 1) copy the file from Object Storage into the database's DATA_PUMP_DIR directory
+  DBMS_CLOUD.GET_OBJECT(
+    object_uri     => '&onnx_uri',
+    directory_name => 'DATA_PUMP_DIR',
+    file_name      => 'all_MiniLM_L12_v2.onnx');
+
+  -- 2) register it as an embedding model named DOC_MODEL
+  DBMS_VECTOR.LOAD_ONNX_MODEL(
+    directory  => 'DATA_PUMP_DIR',
+    file_name  => 'all_MiniLM_L12_v2.onnx',
     model_name => 'DOC_MODEL',
-    credential => NULL,              -- NULL is fine for a pre-authenticated request URL
-    uri        => '&onnx_uri');
+    metadata   => JSON('{"function":"embedding","embeddingOutput":"embedding","input":{"input":["DATA"]}}'));
 END;
 /
 
