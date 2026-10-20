@@ -1,0 +1,6 @@
+   *.pem
+   *.key
+   *.env
+   wallet*/
+   *.zip
+   .DS_Store
