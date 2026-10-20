@@ -8,6 +8,7 @@ GRANT CREATE MINING MODEL TO support_ai;          -- needed to load ONNX embeddi
 GRANT EXECUTE ON DBMS_CLOUD     TO support_ai;
 GRANT EXECUTE ON DBMS_CLOUD_AI  TO support_ai;    -- Select AI
 GRANT EXECUTE ON DBMS_VECTOR    TO support_ai;
+GRANT READ, WRITE ON DIRECTORY DATA_PUMP_DIR TO support_ai;  -- staging area for the ONNX model file
 
 -- Allow outbound calls to OCI Generative AI endpoints
 BEGIN
