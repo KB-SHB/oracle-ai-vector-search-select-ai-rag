@@ -4,7 +4,7 @@
 -- blog post "Use our prebuilt ONNX model now available for embedding generation" (search that title),
 -- unzip it, upload all_MiniLM_L12_v2.onnx to a private Object Storage bucket, create a
 -- pre-authenticated request (PAR) with read access, and paste the PAR URL below.
-DEFINE onnx_uri = 'https://objectstorage.<region>.oraclecloud.com/p/<PAR>/n/<namespace>/b/<bucket>/o/all_MiniLM_L12_v2.onnx'
+DEFINE onnx_uri = 'https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/aKzB2RD6eJ4z_2YyDtWsnXY9sw0YWWivH_bcGuI4pTSt36ZVrFawh_KrUkRibQU6/n/frfpfdjteowl/b/models/o/all_MiniLM_L12_v2.onnx'
 
 BEGIN
   -- 1) copy the file from Object Storage into the database's DATA_PUMP_DIR directory
