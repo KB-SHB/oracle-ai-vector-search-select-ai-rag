@@ -40,6 +40,16 @@ CREATE OR REPLACE PACKAGE BODY kb_search_pkg AS
     RETURN l_rc;
   END search;
 
+  -- Audit logging runs as an AUTONOMOUS TRANSACTION so that answer() can be called from a SELECT
+  -- (a function called from a query may not do DML otherwise: ORA-14551).
+  PROCEDURE log_audit(p_question IN VARCHAR2, p_ids IN VARCHAR2, p_answer IN CLOB, p_ms IN NUMBER) IS
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  BEGIN
+    INSERT INTO rag_audit(question, article_ids, answer, latency_ms)
+    VALUES (SUBSTR(p_question,1,1000), p_ids, p_answer, ROUND(p_ms));
+    COMMIT;
+  END log_audit;
+
   FUNCTION answer(p_question   IN VARCHAR2,
                   p_k          IN PLS_INTEGER DEFAULT 3,
                   p_product_id IN NUMBER      DEFAULT NULL,
@@ -85,9 +95,7 @@ CREATE OR REPLACE PACKAGE BODY kb_search_pkg AS
     l_ms := EXTRACT(SECOND FROM (SYSTIMESTAMP - l_t0)) * 1000
           + EXTRACT(MINUTE FROM (SYSTIMESTAMP - l_t0)) * 60000;
 
-    INSERT INTO rag_audit(question, article_ids, answer, latency_ms)
-    VALUES (SUBSTR(p_question,1,1000), l_ids, l_answer, ROUND(l_ms));
-    COMMIT;
+    log_audit(p_question, l_ids, l_answer, l_ms);
     RETURN l_answer;
   END answer;
 
