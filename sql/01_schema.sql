@@ -28,7 +28,7 @@ CREATE TABLE ticket (
   ticket_id           NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id          NUMBER NOT NULL REFERENCES product,
   severity            VARCHAR2(10) CHECK (severity IN ('LOW','MEDIUM','HIGH','CRITICAL')),
-  status              VARCHAR2(10) CHECK (status IN ('OPEN','IN_PROGRESS','RESOLVED')),
+  status              VARCHAR2(12) CHECK (status IN ('OPEN','IN_PROGRESS','RESOLVED')),
   subject             VARCHAR2(200),
   description         VARCHAR2(2000),
   created_at          TIMESTAMP,
