@@ -53,13 +53,20 @@ flowchart LR
 
 ## Results (fill in after you run it)
 
-| Run | k | Recall@k | MRR | Notes |
-|---|---|---|---|---|
-| 1 | 1 | _ | _ | baseline MiniLM, 100-word chunks |
-| 2 | 3 | _ | _ | |
-| 3 | 3 | _ | _ | after tuning chunk size / adding cross-check |
+| Run | k | Questions | Recall@k | MRR | Notes |
+|---|---|---|---|---|---|
+| 1 | 1 | 10 | 1.000 | 1.000 | baseline MiniLM, 100-word chunks |
+| 2 | 3 | 10 | 1.000 | 1.000 | baseline MiniLM, 100-word chunks |
+| 3 | 5 | 10 | 1.000 | 1.000 | baseline MiniLM, 100-word chunks |
 
-Also record: query latency with and without the vector index (EXPLAIN PLAN), and token/cost estimate per answer.
+Perfect scores on a 10-article toy knowledge base show that the pipeline works end to end.
+They are a baseline, not proof of production quality. A larger corpus and harder questions are the next step.
+
+![Evaluation results](docs/img/eval_results.png)
+
+The optimizer uses the HNSW vector index for similarity search:
+
+![Execution plan showing VECTOR INDEX HNSW SCAN](docs/img/vector_index_plan.png)
 
 ## Make it yours (this is what separates a tutorial from a portfolio piece)
 
