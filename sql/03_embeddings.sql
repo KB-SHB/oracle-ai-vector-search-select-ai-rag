@@ -4,8 +4,10 @@
 -- blog post "Use our prebuilt ONNX model now available for embedding generation" (search that title),
 -- unzip it, upload all_MiniLM_L12_v2.onnx to a private Object Storage bucket, create a
 -- pre-authenticated request (PAR) with read access, and paste the PAR URL below.
-DEFINE onnx_uri = 'https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/aKzB2RD6eJ4z_2YyDtWsnXY9sw0YWWivH_bcGuI4pTSt36ZVrFawh_KrUkRibQU6/n/frfpfdjteowl/b/models/o/all_MiniLM_L12_v2.onnx'
+DEFINE onnx_uri = 'https://objectstorage.<region>.oraclecloud.com/p/<PAR>/n/<namespace>/b/<bucket>/o/all_MiniLM_L12_v2.onnx'
 
+-- Re-running? If you get ORA-40204 (model already exists), the model is loaded: skip this block,
+-- or first run: EXEC DBMS_VECTOR.DROP_ONNX_MODEL('DOC_MODEL', TRUE);
 BEGIN
   -- 1) copy the file from Object Storage into the database's DATA_PUMP_DIR directory
   DBMS_CLOUD.GET_OBJECT(
@@ -30,7 +32,7 @@ SELECT VECTOR_DIMS(VECTOR_EMBEDDING(doc_model USING 'hello world' AS data)) AS d
 -- This is the whole "ingestion pipeline" -- pure SQL, set-based, runs next to the data.
 INSERT INTO kb_chunk (article_id, chunk_seq, chunk_text, embedding)
 SELECT a.article_id,
-       c.chunk_id,
+       ROW_NUMBER() OVER (PARTITION BY a.article_id ORDER BY c.chunk_offset),
        c.chunk_text,
        VECTOR_EMBEDDING(doc_model USING c.chunk_text AS data)
 FROM   kb_article a,
@@ -38,8 +40,10 @@ FROM   kb_article a,
                      LANGUAGE american NORMALIZE all) c;
 COMMIT;
 
-SELECT COUNT(*) AS chunks, COUNT(embedding) AS embedded FROM kb_chunk;
+SELECT COUNT(*) AS chunks FROM kb_chunk;
+SELECT COUNT(*) AS embedded FROM kb_chunk WHERE embedding IS NOT NULL;  -- COUNT(vector_col) raises ORA-22849
 
+-- (ORA-00955 on the next statement just means the index already exists.)
 -- Step C: approximate-nearest-neighbour index (HNSW, in-memory neighbour graph).
 -- On a tiny dataset the optimizer may still choose exact search; the index matters at scale.
 -- Alternative for very large tables / limited memory: ORGANIZATION NEIGHBOR PARTITIONS (IVF).
